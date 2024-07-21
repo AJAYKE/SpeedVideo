@@ -2,22 +2,22 @@
   "manifest_version": 3,
   "name": "Video Speed Controller",
   "version": "1.0",
-  "description": "A simple video speed controller for any website.",
+  "description": "Adjust video speed on any website.",
   "permissions": ["storage", "activeTab", "scripting"],
+  "background": {
+    "service_worker": "background.js"
+  },
   "action": {
     "default_popup": "popup.html",
     "default_icon": {
       "16": "icon16.png",
-      "48": "icon32.png",
+      "32": "icon32.png",
       "128": "icon128.png"
     }
   },
-  "background": {
-    "service_worker": "background.js"
-  },
   "icons": {
     "16": "icon16.png",
-    "48": "icon32.png",
+    "32": "icon32.png",
     "128": "icon128.png"
   }
 }

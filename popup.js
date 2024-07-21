@@ -1,63 +1,37 @@
 document.addEventListener("DOMContentLoaded", function () {
-  const stepInput = document.getElementById("step");
-  const speedInput = document.getElementById("speed");
-  const stepValue = document.getElementById("stepValue");
+  const speedRange = document.getElementById("speedRange");
   const speedValue = document.getElementById("speedValue");
 
-  chrome.storage.sync.get(["speed", "step"], function (data) {
-    if (data.speed !== undefined) {
-      speedInput.value = data.speed;
-      speedValue.textContent = data.speed;
-    }
-    if (data.step !== undefined) {
-      stepInput.value = data.step;
-      stepValue.textContent = data.step;
-      speedInput.step = data.step;
-    }
+  chrome.storage.sync.get("speed", (data) => {
+    speedRange.value = data.speed;
+    speedValue.textContent = `${data.speed}x`;
   });
 
-  function debounce(func, wait) {
-    let timeout;
-    return function (...args) {
-      clearTimeout(timeout);
-      timeout = setTimeout(() => func.apply(this, args), wait);
-    };
-  }
+  speedRange.addEventListener("input", function () {
+    const speed = speedRange.value;
+    speedValue.textContent = `${speed}x`;
+    chrome.storage.sync.set({ speed: parseFloat(speed) });
 
-  const updateSettings = debounce(function () {
-    const step = parseFloat(stepInput.value);
-    const speed = parseFloat(speedInput.value);
-
-    chrome.storage.sync.set({ speed, step }, function () {
-      speedInput.step = step;
-      chrome.tabs.query({}, function (tabs) {
-        tabs.forEach((tab) => {
-          chrome.scripting
-            .executeScript({
-              target: { tabId: tab.id },
-              func: setVideoSpeed,
-              args: [speed],
-            })
-            .catch((err) => console.error(err));
-        });
+    chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+      chrome.scripting.executeScript({
+        target: { tabId: tabs[0].id },
+        func: setVideoSpeed,
+        args: [parseFloat(speed)],
       });
     });
-  }, 200);
+  });
 
   function setVideoSpeed(speed) {
     const videos = document.querySelectorAll("video");
     videos.forEach((video) => {
       video.playbackRate = speed;
     });
+
+    new MutationObserver(() => {
+      const videos = document.querySelectorAll("video");
+      videos.forEach((video) => {
+        video.playbackRate = speed;
+      });
+    }).observe(document.body, { childList: true, subtree: true });
   }
-
-  stepInput.addEventListener("input", function () {
-    stepValue.textContent = stepInput.value;
-    updateSettings();
-  });
-
-  speedInput.addEventListener("input", function () {
-    speedValue.textContent = speedInput.value;
-    updateSettings();
-  });
 });

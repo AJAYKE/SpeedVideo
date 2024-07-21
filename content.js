@@ -1,18 +1,13 @@
-function setSpeed(speed) {
+chrome.storage.sync.get("speed", (data) => {
   const videos = document.querySelectorAll("video");
   videos.forEach((video) => {
-    video.playbackRate = speed;
+    video.playbackRate = data.speed;
   });
-}
 
-chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-  if (message.speed !== undefined) {
-    setSpeed(message.speed);
-  }
-});
-
-chrome.storage.sync.get(["speed"], function (data) {
-  if (data.speed !== undefined) {
-    setSpeed(data.speed);
-  }
+  new MutationObserver(() => {
+    const videos = document.querySelectorAll("video");
+    videos.forEach((video) => {
+      video.playbackRate = data.speed;
+    });
+  }).observe(document.body, { childList: true, subtree: true });
 });
